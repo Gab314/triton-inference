@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-triton
+  labels:
+    app: test-triton
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton
+  template:
+    metadata:
+      name: triton-test
+      labels:
+        app: triton
+    spec:
+      containers:
+      - name: triton
+        image: gabrielkotani/triton:latest
+        ports:
+        - containerPort: 8000
+          name: intra-port1
+        - containerPort: 8001
+          name: intra-port2
+        - containerPort: 8002
+          name: intra-port3
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: cache-volume
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
+        name: cache-volume
+      nodeSelector:
+        instance: inference
+      
