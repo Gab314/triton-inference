@@ -20,13 +20,15 @@ Azure ML
 
 2. **Load model:**
 
-a. `cd hf_model`
-b. `mkdir {model_name}`
-c. Update `name` inside `config.pbtxt`
++ a. `cd hf_model`
++ b. `mkdir {model_name}`
++ c. Update `name` inside `config.pbtxt`
+
 ```txt
 # config.pbtxt
 name: "{model_name}"
 ```
-d. `mkdir {model_version}`
-e. Copy the model files, e.g. `model.pt` 
-f. For Custom Models, e.g. HuggingFace, update `/1/model.py`
+
++ d. `mkdir {model_version}`
++ e. Copy the model files, e.g. `model.pt` 
++ f. For Custom Models, e.g. HuggingFace, update `/1/model.py`
