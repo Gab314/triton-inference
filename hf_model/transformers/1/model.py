@@ -13,6 +13,8 @@ import triton_python_backend_utils as pb_utils
 import subprocess
 from transformers import BertTokenizerFast, BertForSequenceClassification
 import torch
+import time
+
 
 class TritonPythonModel:
     """Your Python model must use the same class name. Every Python model
@@ -43,8 +45,17 @@ class TritonPythonModel:
 
     def execute(self, requests):
         responses = []
-        for sentence in requests:
-            inp = pb_utils.get_input_tensor_by_name(sentence, "sentence").as_numpy()[0].decode("utf-8")
+        
+        for request in requests:
+            parameters = json.loads(request.parameters())
+            token = parameters['token']
+
+            isUnathourized = self._validateToken(token)
+            if isUnathourized:
+                raise pb_utils.TritonModelException("Unauthorized")
+
+
+            inp = pb_utils.get_input_tensor_by_name(request, "sentence").as_numpy()[0].decode("utf-8")
 
             tokenized = self.tokenizer(
                 inp, 
@@ -60,13 +71,18 @@ class TritonPythonModel:
                 )
 
             result = torch.max(torch.softmax(out.logits, dim=1), dim=1)
-            probs = result.values.detach().cpu().numpy()
+            prob = result.values.detach().cpu().numpy()[0]
 
+            response = json.dumps({
+                "prob" : str(prob),
+                "class" : "class_1"
+            })
+            response = np.array(response, dtype=object)
             # Sending results
             inference_response = pb_utils.InferenceResponse(output_tensors=[
                 pb_utils.Tensor(
                     "label",
-                    probs
+                    response
                 )
             ])
 
@@ -74,6 +90,14 @@ class TritonPythonModel:
 
         return responses
     
+
+    def _validateToken(self, token) -> bool:
+        result = True
+        if token == '1234':
+            result = False
+
+        return result
+
 
     def finalize(self):
         """`finalize` is called only once when the model is being unloaded.
